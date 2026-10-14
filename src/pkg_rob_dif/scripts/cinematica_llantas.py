@@ -1,26 +1,4 @@
 #!/usr/bin/env python3
-"""Wheel kinematics node for the differential robot.
-
-Reads the wheel angular velocities w = [wR, wL]^T from /joint_states, maps them
-to the body velocities u = [v, omega]^T, maps those to the pose derivative
-q_dot = [x_dot, y_dot, theta_dot]^T and integrates q. The result is compared
-against the DiffDrive plugin odometry (/odom) and, when available, against the
-simulator ground truth (/ground_truth).
-
-    u = J w        J = [[ r/2,  r/2],
-                        [ r/b, -r/b]]
-
-    q_dot = S(theta) u      S(theta) = [[cos(theta), 0],
-                                        [sin(theta), 0],
-                                        [         0, 1]]
-
-    q_dot = S(theta) J w
-
-Published topics:
-    /odom_cinematica       nav_msgs/Odometry   pose integrated by this node
-    /cinematica/error_odom geometry_msgs/Vector3Stamped  (x, y, theta) error vs /odom
-    /cinematica/error_gt   geometry_msgs/Vector3Stamped  (x, y, theta) error vs ground truth
-"""
 
 import csv
 import math
@@ -34,8 +12,8 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import JointState
 
 
+# Funciones de apoyo para los angulos
 def wrap_angle(a):
-    """Wrap an angle to (-pi, pi]."""
     return math.atan2(math.sin(a), math.cos(a))
 
 
@@ -44,8 +22,8 @@ def yaw_from_quaternion(q):
                       1.0 - 2.0 * (q.y * q.y + q.z * q.z))
 
 
+# Guarda el error RMS y el maximo de cada comparacion
 class ErrorStats:
-    """Running RMS and maximum of the position and heading errors."""
 
     def __init__(self):
         self.n = 0
@@ -75,14 +53,14 @@ class CinematicaLlantas(Node):
     def __init__(self):
         super().__init__('cinematica_llantas')
 
-        # Must match the URDF (wheel_radius, wheel_separation); passed in from the launch file
+        # Parametros del robot que llegan desde el launch
         self.r = self.declare_parameter('wheel_radius', 0.05).value
         self.b = self.declare_parameter('wheel_separation', 0.36).value
         self.right_joint = self.declare_parameter('right_joint', 'right_wheel_joint').value
         self.left_joint = self.declare_parameter('left_joint', 'left_wheel_joint').value
         csv_path = self.declare_parameter('csv_path', '').value
 
-        # Integrated pose q = [x, y, theta] in the odom frame
+        # Pose que vamos integrando
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
@@ -90,7 +68,6 @@ class CinematicaLlantas(Node):
         self.omega = 0.0
         self.last_stamp = None
 
-        # Ground truth is a world-frame pose; its first sample defines the odom origin
         self.gt_origin = None
         self.gt = None
 
@@ -122,7 +99,7 @@ class CinematicaLlantas(Node):
 
         self.get_logger().info(f'r = {self.r} m, b = {self.b} m')
 
-    # ------------------------------------------------------------------ kinematics
+    # Cinematica de las llantas
     def on_joint_states(self, msg):
         try:
             i_r = msg.name.index(self.right_joint)
@@ -144,12 +121,11 @@ class CinematicaLlantas(Node):
         w_r = msg.velocity[i_r]
         w_l = msg.velocity[i_l]
 
-        # u = J w
+        # Pasamos de velocidad de llantas a velocidad del robot
         self.v = self.r * (w_r + w_l) / 2.0
         self.omega = self.r * (w_r - w_l) / self.b
 
-        # q_dot = S(theta) u, integrated with the heading at the middle of the step
-        # (second-order accurate; plain Euler would use self.theta)
+        # Integramos la pose usando el angulo a mitad del paso
         theta_mid = self.theta + self.omega * dt / 2.0
         self.x += self.v * math.cos(theta_mid) * dt
         self.y += self.v * math.sin(theta_mid) * dt
@@ -170,21 +146,19 @@ class CinematicaLlantas(Node):
         odom.twist.twist.angular.z = self.omega
         self.pub_odom.publish(odom)
 
-    # ------------------------------------------------------------------ comparison
+    # Comparacion contra la odometria del plugin y la pose real
     def on_ground_truth(self, msg):
         p = msg.pose.pose.position
         yaw = yaw_from_quaternion(msg.pose.pose.orientation)
         if self.gt_origin is None:
             self.gt_origin = (p.x, p.y, yaw)
         x0, y0, th0 = self.gt_origin
-        # Express the world pose in the odom frame (the robot's starting pose)
+        # Llevamos la pose real al marco donde arranco el robot
         dx, dy = p.x - x0, p.y - y0
         c, s = math.cos(-th0), math.sin(-th0)
         self.gt = (c * dx - s * dy, s * dx + c * dy, wrap_angle(yaw - th0))
 
     def on_odom(self, msg):
-        # /odom (30 Hz) is compared with the latest own estimate; /joint_states arrives at
-        # the simulation rate, so the time offset between both is at most one sim step.
         if self.last_stamp is None:
             return
         p = msg.pose.pose.position

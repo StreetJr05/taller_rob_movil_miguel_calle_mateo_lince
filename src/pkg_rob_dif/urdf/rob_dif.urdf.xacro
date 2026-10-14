@@ -1,55 +1,44 @@
 <?xml version="1.0"?>
-<!-- Differential drive robot: box chassis, two drive wheels and a spherical caster -->
 <robot name="robot_diferencial" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- ===================== Parameters ===================== -->
-  <!-- Chassis -->
+  <!-- Medidas del robot -->
   <xacro:property name="base_length" value="0.4"/>
   <xacro:property name="base_width"  value="0.3"/>
   <xacro:property name="base_height" value="0.12"/>
   <xacro:property name="base_mass"   value="1.0"/>
 
-  <!-- Drive wheels -->
   <xacro:property name="wheel_radius" value="0.05"/>
   <xacro:property name="wheel_width"  value="0.04"/>
   <xacro:property name="wheel_mass"   value="0.2"/>
-  <xacro:property name="wheel_x"      value="0.10"/>   <!-- forward offset from chassis center -->
-  <!-- Distance between wheel centers (b). Must leave a gap to the chassis side:
-       b/2 - wheel_width/2 > base_width/2  ->  0.18 - 0.02 = 0.16 > 0.15 -->
+  <xacro:property name="wheel_x"      value="0.10"/>
   <xacro:property name="wheel_separation" value="0.36"/>
   <xacro:property name="wheel_y"      value="${wheel_separation/2}"/>
   <xacro:property name="wheel_z"      value="${-base_height/2}"/>
 
-  <!-- Caster: its bottom touches the ground at the same height as the wheels -->
   <xacro:property name="caster_radius" value="0.025"/>
   <xacro:property name="caster_mass"   value="0.05"/>
   <xacro:property name="caster_x"      value="${-base_length/2 + caster_radius + 0.02}"/>
   <xacro:property name="caster_z"      value="${wheel_z - wheel_radius + caster_radius}"/>
 
-  <!-- Height of the chassis center above the ground -->
   <xacro:property name="base_z" value="${wheel_radius - wheel_z}"/>
 
-  <!-- ===================== Sensor parameters ===================== -->
-  <!-- Lidar: 2D, full turn, 1 deg resolution. max_angle stops one step short of +pi
-       so the first and last rays do not point in the same direction. -->
+  <!-- Parametros de los sensores -->
   <xacro:property name="lidar_samples"   value="360"/>
   <xacro:property name="lidar_min_angle" value="${-pi}"/>
   <xacro:property name="lidar_max_angle" value="${pi - 2*pi/lidar_samples}"/>
   <xacro:property name="lidar_range_min" value="0.15"/>
   <xacro:property name="lidar_range_max" value="12.0"/>
   <xacro:property name="lidar_rate"      value="10"/>
-  <xacro:property name="lidar_noise"     value="0.01"/>   <!-- range std dev [m] -->
+  <xacro:property name="lidar_noise"     value="0.01"/>
 
-  <!-- Camera: mounted on the front face of the chassis -->
   <xacro:property name="camera_x"      value="${base_length/2 + 0.01}"/>
   <xacro:property name="camera_z"      value="0.03"/>
-  <xacro:property name="camera_hfov"   value="1.047"/>   <!-- 60 deg -->
+  <xacro:property name="camera_hfov"   value="1.047"/>
   <xacro:property name="camera_width"  value="640"/>
   <xacro:property name="camera_height" value="480"/>
   <xacro:property name="camera_rate"   value="30"/>
-  <xacro:property name="camera_noise"  value="0.007"/>  <!-- pixel std dev, normalized [0,1] -->
+  <xacro:property name="camera_noise"  value="0.007"/>
 
-  <!-- ===================== Materials ===================== -->
   <material name="amarillo">
     <color rgba="0.88 0.68 0.00 1"/>
   </material>
@@ -60,7 +49,7 @@
     <color rgba="0.6 0.6 0.6 1"/>
   </material>
 
-  <!-- ===================== Inertia macros ===================== -->
+  <!-- Macros para calcular las inercias -->
   <xacro:macro name="box_inertia" params="m x y z">
     <inertial>
       <mass value="${m}"/>
@@ -70,7 +59,6 @@
     </inertial>
   </xacro:macro>
 
-  <!-- Cylinder whose axis is rotated to lie along Y -->
   <xacro:macro name="cylinder_inertia" params="m r h">
     <inertial>
       <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
@@ -90,8 +78,7 @@
     </inertial>
   </xacro:macro>
 
-  <!-- ===================== Links ===================== -->
-  <!-- Footprint on the ground plane -->
+  <!-- Cuerpo del robot -->
   <link name="base_footprint"/>
 
   <link name="base_link">
@@ -109,16 +96,14 @@
     <xacro:box_inertia m="${base_mass}" x="${base_length}" y="${base_width}" z="${base_height}"/>
   </link>
 
-  <!-- base_footprint sits on the ground directly under the wheel axle midpoint,
-       which is the point a differential robot rotates about. The chassis is shifted
-       back by wheel_x so the wheels end up under base_footprint. -->
+  <!-- Corremos el chasis para que el eje de las llantas quede en el origen -->
   <joint name="base_footprint_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
     <origin xyz="${-wheel_x} 0 ${base_z}" rpy="0 0 0"/>
   </joint>
 
-  <!-- Drive wheel macro: side = left/right, reflect = 1/-1 -->
+  <!-- Llantas de traccion -->
   <xacro:macro name="wheel" params="side reflect">
     <link name="${side}_wheel_link">
       <visual>
@@ -153,7 +138,7 @@
   <xacro:wheel side="left"  reflect="1"/>
   <xacro:wheel side="right" reflect="-1"/>
 
-  <!-- Spherical caster wheel -->
+  <!-- Rueda loca -->
   <link name="caster_link">
     <visual>
       <geometry>
@@ -169,8 +154,7 @@
     <xacro:sphere_inertia m="${caster_mass}" r="${caster_radius}"/>
   </link>
 
-  <!-- URDF has no ball joint: emulate it with three continuous joints (X, Y, Z)
-       chained through two massless-like intermediate links at the sphere center -->
+  <!-- Como URDF no tiene junta esferica la armamos con tres juntas giratorias -->
   <xacro:macro name="dummy_inertia">
     <inertial>
       <mass value="0.001"/>
@@ -206,13 +190,11 @@
     <axis xyz="0 0 1"/>
   </joint>
 
-  <!-- With friction the sphere rolls on the ground instead of sliding -->
   <gazebo reference="caster_link">
     <mu1>1.0</mu1>
     <mu2>1.0</mu2>
   </gazebo>
 
-  <!-- ===================== Sensors ===================== -->
   <!-- Lidar -->
   <link name="lidar_link">
     <visual>
@@ -267,7 +249,7 @@
     </sensor>
   </gazebo>
 
-  <!-- Camera -->
+  <!-- Camara -->
   <link name="camera_link">
     <visual>
       <geometry>
@@ -291,8 +273,7 @@
     <origin xyz="${camera_x} 0 ${camera_z}" rpy="0 0 0"/>
   </joint>
 
-  <!-- Optical frame (REP 103): z forward, x right, y down. Image and camera_info
-       are stamped with this frame so image-processing tools project correctly. -->
+  <!-- Marco optico de la camara con z mirando hacia adelante -->
   <link name="camera_optical_frame"/>
 
   <joint name="joint_camera_optical" type="fixed">
@@ -328,7 +309,7 @@
     </sensor>
   </gazebo>
 
-  <!-- ===================== Differential drive plugin ===================== -->
+  <!-- Plugin de manejo diferencial -->
   <gazebo>
     <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
       <left_joint>left_wheel_joint</left_joint>
@@ -344,15 +325,12 @@
     </plugin>
   </gazebo>
 
-  <!-- ===================== Joint state publisher ===================== -->
-  <!-- Publishes wheel/caster joint positions so robot_state_publisher can build their TF -->
+  <!-- Publica el estado de las juntas para armar los TF de las llantas -->
   <gazebo>
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher"/>
   </gazebo>
 
-  <!-- ===================== Ground truth ===================== -->
-  <!-- True pose of the robot taken from the simulator (no wheel slip, no integration
-       error). Used only to evaluate the odometries, never for control. -->
+  <!-- Pose real sacada del simulador solo para comparar las odometrias -->
   <gazebo>
     <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
       <odom_frame>world</odom_frame>
