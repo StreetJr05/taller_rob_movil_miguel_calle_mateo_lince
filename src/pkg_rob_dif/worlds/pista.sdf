@@ -1,0 +1,2755 @@
+<?xml version="1.0" ?>
+<!--
+  Pista para robot_diferencial (Gazebo Harmonic / gz-sim 8)
+
+  Recorrido (sentido antihorario, carril de 1.6 m):
+    1. Recta inferior  y=0, x 0..8      -> slalom de 3 obstaculos
+    2. Horquilla 180 grados, R=2.5 m    -> 1 obstaculo en la curva
+    3. Recta corta + chicane en S (R=1.5 m)  -> 1 obstaculo
+    4. Recta superior  y=8, x 3.5..0    -> ESTRECHAMIENTO a 0.75 m
+    5. Curva 90 grados R=2 m, recta izquierda x=-2 -> 1 obstaculo
+    6. Curva 90 grados R=2 m que cierra en la linea de salida
+
+  Punto de spawn: x=1.0  y=0.0  z=0.02  yaw=0.0  (frame "spawn_point")
+  Ejemplo:
+    ros2 run ros_gz_sim create -topic robot_description -name robot_diferencial \
+      -x 1.0 -y 0.0 -z 0.02 -Y 0.0
+-->
+<sdf version="1.9">
+  <world name="pista">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <!-- Necesario para el lidar y la camara del robot -->
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <gravity>0 0 -9.8</gravity>
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.8 0.9 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light type="directional" name="sol">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- ===================== Punto de spawn ===================== -->
+    <frame name="spawn_point">
+      <pose>1.0 0.0 0.02 0 0 0</pose>
+    </frame>
+
+    <!-- ===================== Suelo ===================== -->
+    <model name="suelo">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>40 40</size></plane>
+          </geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>40 40</size></plane>
+          </geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.40 0.40 0.40 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Linea de salida/meta y marca de spawn (solo visuales, sin colision) -->
+    <model name="marcas">
+      <static>true</static>
+      <link name="link">
+        <visual name="linea_salida">
+          <pose>0 0 0.001 0 0 0</pose>
+          <geometry><box><size>0.08 1.6 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <visual name="marca_spawn">
+          <pose>1.0 0 0.001 0 0 0</pose>
+          <geometry><cylinder><radius>0.3</radius><length>0.002</length></cylinder></geometry>
+          <material><ambient>0.1 0.6 0.1 1</ambient><diffuse>0.1 0.7 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===================== Muros (generados) ===================== -->
+    <model name="muros">
+      <static>true</static>
+      <link name="link">
+        <collision name="muro_int_000_col">
+          <pose>4.0000 0.8500 0.2 0 0 0.00000</pose>
+          <geometry><box><size>8.0400 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_000_vis">
+          <pose>4.0000 0.8500 0.2 0 0 0.00000</pose>
+          <geometry><box><size>8.0400 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_001_col">
+          <pose>8.0498 0.8515 0.2 0 0 0.03021</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_001_vis">
+          <pose>8.0498 0.8515 0.2 0 0 0.03021</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_002_col">
+          <pose>8.1493 0.8575 0.2 0 0 0.09062</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_002_vis">
+          <pose>8.1493 0.8575 0.2 0 0 0.09062</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_003_col">
+          <pose>8.2482 0.8695 0.2 0 0 0.15104</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_003_vis">
+          <pose>8.2482 0.8695 0.2 0 0 0.15104</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_004_col">
+          <pose>8.3461 0.8875 0.2 0 0 0.21145</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_004_vis">
+          <pose>8.3461 0.8875 0.2 0 0 0.21145</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_005_col">
+          <pose>8.4429 0.9113 0.2 0 0 0.27187</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_005_vis">
+          <pose>8.4429 0.9113 0.2 0 0 0.27187</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_006_col">
+          <pose>8.5380 0.9410 0.2 0 0 0.33228</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_006_vis">
+          <pose>8.5380 0.9410 0.2 0 0 0.33228</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_007_col">
+          <pose>8.6311 0.9763 0.2 0 0 0.39270</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_007_vis">
+          <pose>8.6311 0.9763 0.2 0 0 0.39270</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_008_col">
+          <pose>8.7220 1.0172 0.2 0 0 0.45311</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_008_vis">
+          <pose>8.7220 1.0172 0.2 0 0 0.45311</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_009_col">
+          <pose>8.8102 1.0635 0.2 0 0 0.51353</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_009_vis">
+          <pose>8.8102 1.0635 0.2 0 0 0.51353</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_010_col">
+          <pose>8.8955 1.1150 0.2 0 0 0.57394</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_010_vis">
+          <pose>8.8955 1.1150 0.2 0 0 0.57394</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_011_col">
+          <pose>8.9774 1.1716 0.2 0 0 0.63436</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_011_vis">
+          <pose>8.9774 1.1716 0.2 0 0 0.63436</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_012_col">
+          <pose>9.0559 1.2331 0.2 0 0 0.69478</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_012_vis">
+          <pose>9.0559 1.2331 0.2 0 0 0.69478</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_013_col">
+          <pose>9.1304 1.2991 0.2 0 0 0.75519</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_013_vis">
+          <pose>9.1304 1.2991 0.2 0 0 0.75519</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_014_col">
+          <pose>9.2009 1.3696 0.2 0 0 0.81561</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_014_vis">
+          <pose>9.2009 1.3696 0.2 0 0 0.81561</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_015_col">
+          <pose>9.2669 1.4441 0.2 0 0 0.87602</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_015_vis">
+          <pose>9.2669 1.4441 0.2 0 0 0.87602</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_016_col">
+          <pose>9.3284 1.5226 0.2 0 0 0.93644</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_016_vis">
+          <pose>9.3284 1.5226 0.2 0 0 0.93644</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_017_col">
+          <pose>9.3850 1.6045 0.2 0 0 0.99685</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_017_vis">
+          <pose>9.3850 1.6045 0.2 0 0 0.99685</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_018_col">
+          <pose>9.4365 1.6898 0.2 0 0 1.05727</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_018_vis">
+          <pose>9.4365 1.6898 0.2 0 0 1.05727</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_019_col">
+          <pose>9.4828 1.7780 0.2 0 0 1.11768</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_019_vis">
+          <pose>9.4828 1.7780 0.2 0 0 1.11768</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_020_col">
+          <pose>9.5237 1.8689 0.2 0 0 1.17810</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_020_vis">
+          <pose>9.5237 1.8689 0.2 0 0 1.17810</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_021_col">
+          <pose>9.5590 1.9620 0.2 0 0 1.23851</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_021_vis">
+          <pose>9.5590 1.9620 0.2 0 0 1.23851</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_022_col">
+          <pose>9.5887 2.0571 0.2 0 0 1.29893</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_022_vis">
+          <pose>9.5887 2.0571 0.2 0 0 1.29893</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_023_col">
+          <pose>9.6125 2.1539 0.2 0 0 1.35934</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_023_vis">
+          <pose>9.6125 2.1539 0.2 0 0 1.35934</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_024_col">
+          <pose>9.6305 2.2518 0.2 0 0 1.41976</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_024_vis">
+          <pose>9.6305 2.2518 0.2 0 0 1.41976</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_025_col">
+          <pose>9.6425 2.3507 0.2 0 0 1.48017</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_025_vis">
+          <pose>9.6425 2.3507 0.2 0 0 1.48017</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_026_col">
+          <pose>9.6485 2.4502 0.2 0 0 1.54059</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_026_vis">
+          <pose>9.6485 2.4502 0.2 0 0 1.54059</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_027_col">
+          <pose>9.6485 2.5498 0.2 0 0 1.60100</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_027_vis">
+          <pose>9.6485 2.5498 0.2 0 0 1.60100</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_028_col">
+          <pose>9.6425 2.6493 0.2 0 0 1.66142</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_028_vis">
+          <pose>9.6425 2.6493 0.2 0 0 1.66142</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_029_col">
+          <pose>9.6305 2.7482 0.2 0 0 1.72183</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_029_vis">
+          <pose>9.6305 2.7482 0.2 0 0 1.72183</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_030_col">
+          <pose>9.6125 2.8461 0.2 0 0 1.78225</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_030_vis">
+          <pose>9.6125 2.8461 0.2 0 0 1.78225</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_031_col">
+          <pose>9.5887 2.9429 0.2 0 0 1.84266</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_031_vis">
+          <pose>9.5887 2.9429 0.2 0 0 1.84266</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_032_col">
+          <pose>9.5590 3.0380 0.2 0 0 1.90308</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_032_vis">
+          <pose>9.5590 3.0380 0.2 0 0 1.90308</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_033_col">
+          <pose>9.5237 3.1311 0.2 0 0 1.96350</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_033_vis">
+          <pose>9.5237 3.1311 0.2 0 0 1.96350</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_034_col">
+          <pose>9.4828 3.2220 0.2 0 0 2.02391</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_034_vis">
+          <pose>9.4828 3.2220 0.2 0 0 2.02391</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_035_col">
+          <pose>9.4365 3.3102 0.2 0 0 2.08433</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_035_vis">
+          <pose>9.4365 3.3102 0.2 0 0 2.08433</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_036_col">
+          <pose>9.3850 3.3955 0.2 0 0 2.14474</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_036_vis">
+          <pose>9.3850 3.3955 0.2 0 0 2.14474</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_037_col">
+          <pose>9.3284 3.4774 0.2 0 0 2.20516</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_037_vis">
+          <pose>9.3284 3.4774 0.2 0 0 2.20516</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_038_col">
+          <pose>9.2669 3.5559 0.2 0 0 2.26557</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_038_vis">
+          <pose>9.2669 3.5559 0.2 0 0 2.26557</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_039_col">
+          <pose>9.2009 3.6304 0.2 0 0 2.32599</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_039_vis">
+          <pose>9.2009 3.6304 0.2 0 0 2.32599</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_040_col">
+          <pose>9.1304 3.7009 0.2 0 0 2.38640</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_040_vis">
+          <pose>9.1304 3.7009 0.2 0 0 2.38640</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_041_col">
+          <pose>9.0559 3.7669 0.2 0 0 2.44682</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_041_vis">
+          <pose>9.0559 3.7669 0.2 0 0 2.44682</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_042_col">
+          <pose>8.9774 3.8284 0.2 0 0 2.50723</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_042_vis">
+          <pose>8.9774 3.8284 0.2 0 0 2.50723</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_043_col">
+          <pose>8.8955 3.8850 0.2 0 0 2.56765</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_043_vis">
+          <pose>8.8955 3.8850 0.2 0 0 2.56765</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_044_col">
+          <pose>8.8102 3.9365 0.2 0 0 2.62806</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_044_vis">
+          <pose>8.8102 3.9365 0.2 0 0 2.62806</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_045_col">
+          <pose>8.7220 3.9828 0.2 0 0 2.68848</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_045_vis">
+          <pose>8.7220 3.9828 0.2 0 0 2.68848</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_046_col">
+          <pose>8.6311 4.0237 0.2 0 0 2.74889</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_046_vis">
+          <pose>8.6311 4.0237 0.2 0 0 2.74889</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_047_col">
+          <pose>8.5380 4.0590 0.2 0 0 2.80931</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_047_vis">
+          <pose>8.5380 4.0590 0.2 0 0 2.80931</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_048_col">
+          <pose>8.4429 4.0887 0.2 0 0 2.86972</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_048_vis">
+          <pose>8.4429 4.0887 0.2 0 0 2.86972</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_049_col">
+          <pose>8.3461 4.1125 0.2 0 0 2.93014</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_049_vis">
+          <pose>8.3461 4.1125 0.2 0 0 2.93014</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_050_col">
+          <pose>8.2482 4.1305 0.2 0 0 2.99055</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_050_vis">
+          <pose>8.2482 4.1305 0.2 0 0 2.99055</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_051_col">
+          <pose>8.1493 4.1425 0.2 0 0 3.05097</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_051_vis">
+          <pose>8.1493 4.1425 0.2 0 0 3.05097</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_052_col">
+          <pose>8.0498 4.1485 0.2 0 0 3.11139</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_052_vis">
+          <pose>8.0498 4.1485 0.2 0 0 3.11139</pose>
+          <geometry><box><size>0.1397 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_053_col">
+          <pose>7.2500 4.1500 0.2 0 0 3.14159</pose>
+          <geometry><box><size>1.5400 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_053_vis">
+          <pose>7.2500 4.1500 0.2 0 0 3.14159</pose>
+          <geometry><box><size>1.5400 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_054_col">
+          <pose>6.3848 4.1557 0.2 0 0 3.09251</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_054_vis">
+          <pose>6.3848 4.1557 0.2 0 0 3.09251</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_055_col">
+          <pose>6.1556 4.1782 0.2 0 0 2.99433</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_055_vis">
+          <pose>6.1556 4.1782 0.2 0 0 2.99433</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_056_col">
+          <pose>5.9297 4.2232 0.2 0 0 2.89616</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_056_vis">
+          <pose>5.9297 4.2232 0.2 0 0 2.89616</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_057_col">
+          <pose>5.7093 4.2900 0.2 0 0 2.79798</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_057_vis">
+          <pose>5.7093 4.2900 0.2 0 0 2.79798</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_058_col">
+          <pose>5.4965 4.3782 0.2 0 0 2.69981</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_058_vis">
+          <pose>5.4965 4.3782 0.2 0 0 2.69981</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_059_col">
+          <pose>5.2933 4.4868 0.2 0 0 2.60163</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_059_vis">
+          <pose>5.2933 4.4868 0.2 0 0 2.60163</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_060_col">
+          <pose>5.1018 4.6147 0.2 0 0 2.50346</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_060_vis">
+          <pose>5.1018 4.6147 0.2 0 0 2.50346</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_061_col">
+          <pose>4.9237 4.7609 0.2 0 0 2.40528</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_061_vis">
+          <pose>4.9237 4.7609 0.2 0 0 2.40528</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_062_col">
+          <pose>4.7609 4.9237 0.2 0 0 2.30711</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_062_vis">
+          <pose>4.7609 4.9237 0.2 0 0 2.30711</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_063_col">
+          <pose>4.6147 5.1018 0.2 0 0 2.20893</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_063_vis">
+          <pose>4.6147 5.1018 0.2 0 0 2.20893</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_064_col">
+          <pose>4.4868 5.2933 0.2 0 0 2.11076</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_064_vis">
+          <pose>4.4868 5.2933 0.2 0 0 2.11076</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_065_col">
+          <pose>4.3782 5.4965 0.2 0 0 2.01258</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_065_vis">
+          <pose>4.3782 5.4965 0.2 0 0 2.01258</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_066_col">
+          <pose>4.2900 5.7093 0.2 0 0 1.91441</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_066_vis">
+          <pose>4.2900 5.7093 0.2 0 0 1.91441</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_067_col">
+          <pose>4.2232 5.9297 0.2 0 0 1.81623</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_067_vis">
+          <pose>4.2232 5.9297 0.2 0 0 1.81623</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_068_col">
+          <pose>4.1782 6.1556 0.2 0 0 1.71806</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_068_vis">
+          <pose>4.1782 6.1556 0.2 0 0 1.71806</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_069_col">
+          <pose>4.1541 6.4167 0.2 0 0 1.61988</pose>
+          <geometry><box><size>0.3344 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_069_vis">
+          <pose>4.1541 6.4167 0.2 0 0 1.61988</pose>
+          <geometry><box><size>0.3344 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_070_col">
+          <pose>4.1422 6.5953 0.2 0 0 1.71806</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_070_vis">
+          <pose>4.1422 6.5953 0.2 0 0 1.71806</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_071_col">
+          <pose>4.1298 6.6577 0.2 0 0 1.81623</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_071_vis">
+          <pose>4.1298 6.6577 0.2 0 0 1.81623</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_072_col">
+          <pose>4.1113 6.7187 0.2 0 0 1.91441</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_072_vis">
+          <pose>4.1113 6.7187 0.2 0 0 1.91441</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_073_col">
+          <pose>4.0869 6.7776 0.2 0 0 2.01258</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_073_vis">
+          <pose>4.0869 6.7776 0.2 0 0 2.01258</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_074_col">
+          <pose>4.0569 6.8338 0.2 0 0 2.11076</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_074_vis">
+          <pose>4.0569 6.8338 0.2 0 0 2.11076</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_075_col">
+          <pose>4.0215 6.8867 0.2 0 0 2.20893</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_075_vis">
+          <pose>4.0215 6.8867 0.2 0 0 2.20893</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_076_col">
+          <pose>3.9810 6.9360 0.2 0 0 2.30711</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_076_vis">
+          <pose>3.9810 6.9360 0.2 0 0 2.30711</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_077_col">
+          <pose>3.9360 6.9810 0.2 0 0 2.40528</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_077_vis">
+          <pose>3.9360 6.9810 0.2 0 0 2.40528</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_078_col">
+          <pose>3.8867 7.0215 0.2 0 0 2.50346</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_078_vis">
+          <pose>3.8867 7.0215 0.2 0 0 2.50346</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_079_col">
+          <pose>3.8338 7.0569 0.2 0 0 2.60163</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_079_vis">
+          <pose>3.8338 7.0569 0.2 0 0 2.60163</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_080_col">
+          <pose>3.7776 7.0869 0.2 0 0 2.69981</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_080_vis">
+          <pose>3.7776 7.0869 0.2 0 0 2.69981</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_081_col">
+          <pose>3.7187 7.1113 0.2 0 0 2.79798</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_081_vis">
+          <pose>3.7187 7.1113 0.2 0 0 2.79798</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_082_col">
+          <pose>3.6577 7.1298 0.2 0 0 2.89616</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_082_vis">
+          <pose>3.6577 7.1298 0.2 0 0 2.89616</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_083_col">
+          <pose>3.5953 7.1422 0.2 0 0 2.99433</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_083_vis">
+          <pose>3.5953 7.1422 0.2 0 0 2.99433</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_084_col">
+          <pose>3.5319 7.1484 0.2 0 0 3.09251</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_084_vis">
+          <pose>3.5319 7.1484 0.2 0 0 3.09251</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_085_col">
+          <pose>3.4239 7.1516 0.2 0 0 3.12115</pose>
+          <geometry><box><size>0.1922 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_085_vis">
+          <pose>3.4239 7.1516 0.2 0 0 3.12115</pose>
+          <geometry><box><size>0.1922 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_086_col">
+          <pose>3.2717 7.1767 0.2 0 0 2.84079</pose>
+          <geometry><box><size>0.1993 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_086_vis">
+          <pose>3.2717 7.1767 0.2 0 0 2.84079</pose>
+          <geometry><box><size>0.1993 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_087_col">
+          <pose>3.1196 7.2463 0.2 0 0 2.59829</pose>
+          <geometry><box><size>0.2178 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_087_vis">
+          <pose>3.1196 7.2463 0.2 0 0 2.59829</pose>
+          <geometry><box><size>0.2178 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_088_col">
+          <pose>2.9674 7.3479 0.2 0 0 2.51023</pose>
+          <geometry><box><size>0.2285 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_088_vis">
+          <pose>2.9674 7.3479 0.2 0 0 2.51023</pose>
+          <geometry><box><size>0.2285 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_089_col">
+          <pose>2.8152 7.4535 0.2 0 0 2.56033</pose>
+          <geometry><box><size>0.2221 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_089_vis">
+          <pose>2.8152 7.4535 0.2 0 0 2.56033</pose>
+          <geometry><box><size>0.2221 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_090_col">
+          <pose>2.6630 7.5340 0.2 0 0 2.75964</pose>
+          <geometry><box><size>0.2040 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_090_vis">
+          <pose>2.6630 7.5340 0.2 0 0 2.75964</pose>
+          <geometry><box><size>0.2040 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_091_col">
+          <pose>2.5109 7.5698 0.2 0 0 3.07329</pose>
+          <geometry><box><size>0.1925 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_091_vis">
+          <pose>2.5109 7.5698 0.2 0 0 3.07329</pose>
+          <geometry><box><size>0.1925 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_092_col">
+          <pose>1.7500 7.5750 0.2 0 0 3.14159</pose>
+          <geometry><box><size>1.4096 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_092_vis">
+          <pose>1.7500 7.5750 0.2 0 0 3.14159</pose>
+          <geometry><box><size>1.4096 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_093_col">
+          <pose>0.9891 7.5705 0.2 0 0 -3.08225</pose>
+          <geometry><box><size>0.1924 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_093_vis">
+          <pose>0.9891 7.5705 0.2 0 0 -3.08225</pose>
+          <geometry><box><size>0.1924 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_094_col">
+          <pose>0.8370 7.5364 0.2 0 0 -2.77115</pose>
+          <geometry><box><size>0.2032 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_094_vis">
+          <pose>0.8370 7.5364 0.2 0 0 -2.77115</pose>
+          <geometry><box><size>0.2032 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_095_col">
+          <pose>0.6848 7.4574 0.2 0 0 -2.56535</pose>
+          <geometry><box><size>0.2215 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_095_vis">
+          <pose>0.6848 7.4574 0.2 0 0 -2.56535</pose>
+          <geometry><box><size>0.2215 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_096_col">
+          <pose>0.5326 7.3523 0.2 0 0 -2.50961</pose>
+          <geometry><box><size>0.2286 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_096_vis">
+          <pose>0.5326 7.3523 0.2 0 0 -2.50961</pose>
+          <geometry><box><size>0.2286 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_097_col">
+          <pose>0.3804 7.2499 0.2 0 0 -2.59186</pose>
+          <geometry><box><size>0.2185 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_097_vis">
+          <pose>0.3804 7.2499 0.2 0 0 -2.59186</pose>
+          <geometry><box><size>0.2185 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_098_col">
+          <pose>0.2283 7.1786 0.2 0 0 -2.82785</pose>
+          <geometry><box><size>0.2000 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_098_vis">
+          <pose>0.2283 7.1786 0.2 0 0 -2.82785</pose>
+          <geometry><box><size>0.2000 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_099_col">
+          <pose>0.0761 7.1520 0.2 0 0 -3.11570</pose>
+          <geometry><box><size>0.1922 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_099_vis">
+          <pose>0.0761 7.1520 0.2 0 0 -3.11570</pose>
+          <geometry><box><size>0.1922 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_100_col">
+          <pose>-0.0430 7.1484 0.2 0 0 -3.10419</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_100_vis">
+          <pose>-0.0430 7.1484 0.2 0 0 -3.10419</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_101_col">
+          <pose>-0.1287 7.1420 0.2 0 0 -3.02939</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_101_vis">
+          <pose>-0.1287 7.1420 0.2 0 0 -3.02939</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_102_col">
+          <pose>-0.2136 7.1292 0.2 0 0 -2.95459</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_102_vis">
+          <pose>-0.2136 7.1292 0.2 0 0 -2.95459</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_103_col">
+          <pose>-0.2974 7.1100 0.2 0 0 -2.87979</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_103_vis">
+          <pose>-0.2974 7.1100 0.2 0 0 -2.87979</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_104_col">
+          <pose>-0.3796 7.0847 0.2 0 0 -2.80499</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_104_vis">
+          <pose>-0.3796 7.0847 0.2 0 0 -2.80499</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_105_col">
+          <pose>-0.4596 7.0533 0.2 0 0 -2.73019</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_105_vis">
+          <pose>-0.4596 7.0533 0.2 0 0 -2.73019</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_106_col">
+          <pose>-0.5370 7.0160 0.2 0 0 -2.65539</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_106_vis">
+          <pose>-0.5370 7.0160 0.2 0 0 -2.65539</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_107_col">
+          <pose>-0.6114 6.9731 0.2 0 0 -2.58059</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_107_vis">
+          <pose>-0.6114 6.9731 0.2 0 0 -2.58059</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_108_col">
+          <pose>-0.6824 6.9246 0.2 0 0 -2.50579</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_108_vis">
+          <pose>-0.6824 6.9246 0.2 0 0 -2.50579</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_109_col">
+          <pose>-0.7496 6.8711 0.2 0 0 -2.43099</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_109_vis">
+          <pose>-0.7496 6.8711 0.2 0 0 -2.43099</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_110_col">
+          <pose>-0.8126 6.8126 0.2 0 0 -2.35619</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_110_vis">
+          <pose>-0.8126 6.8126 0.2 0 0 -2.35619</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_111_col">
+          <pose>-0.8711 6.7496 0.2 0 0 -2.28139</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_111_vis">
+          <pose>-0.8711 6.7496 0.2 0 0 -2.28139</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_112_col">
+          <pose>-0.9246 6.6824 0.2 0 0 -2.20659</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_112_vis">
+          <pose>-0.9246 6.6824 0.2 0 0 -2.20659</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_113_col">
+          <pose>-0.9731 6.6114 0.2 0 0 -2.13180</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_113_vis">
+          <pose>-0.9731 6.6114 0.2 0 0 -2.13180</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_114_col">
+          <pose>-1.0160 6.5370 0.2 0 0 -2.05700</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_114_vis">
+          <pose>-1.0160 6.5370 0.2 0 0 -2.05700</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_115_col">
+          <pose>-1.0533 6.4596 0.2 0 0 -1.98220</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_115_vis">
+          <pose>-1.0533 6.4596 0.2 0 0 -1.98220</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_116_col">
+          <pose>-1.0847 6.3796 0.2 0 0 -1.90740</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_116_vis">
+          <pose>-1.0847 6.3796 0.2 0 0 -1.90740</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_117_col">
+          <pose>-1.1100 6.2974 0.2 0 0 -1.83260</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_117_vis">
+          <pose>-1.1100 6.2974 0.2 0 0 -1.83260</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_118_col">
+          <pose>-1.1292 6.2136 0.2 0 0 -1.75780</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_118_vis">
+          <pose>-1.1292 6.2136 0.2 0 0 -1.75780</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_119_col">
+          <pose>-1.1420 6.1287 0.2 0 0 -1.68300</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_119_vis">
+          <pose>-1.1420 6.1287 0.2 0 0 -1.68300</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_120_col">
+          <pose>-1.1484 6.0430 0.2 0 0 -1.60820</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_120_vis">
+          <pose>-1.1484 6.0430 0.2 0 0 -1.60820</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_121_col">
+          <pose>-1.1500 4.0000 0.2 0 0 -1.57080</pose>
+          <geometry><box><size>4.0400 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_121_vis">
+          <pose>-1.1500 4.0000 0.2 0 0 -1.57080</pose>
+          <geometry><box><size>4.0400 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_122_col">
+          <pose>-1.1484 1.9570 0.2 0 0 -1.53340</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_122_vis">
+          <pose>-1.1484 1.9570 0.2 0 0 -1.53340</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_123_col">
+          <pose>-1.1420 1.8713 0.2 0 0 -1.45860</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_123_vis">
+          <pose>-1.1420 1.8713 0.2 0 0 -1.45860</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_124_col">
+          <pose>-1.1292 1.7864 0.2 0 0 -1.38380</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_124_vis">
+          <pose>-1.1292 1.7864 0.2 0 0 -1.38380</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_125_col">
+          <pose>-1.1100 1.7026 0.2 0 0 -1.30900</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_125_vis">
+          <pose>-1.1100 1.7026 0.2 0 0 -1.30900</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_126_col">
+          <pose>-1.0847 1.6204 0.2 0 0 -1.23420</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_126_vis">
+          <pose>-1.0847 1.6204 0.2 0 0 -1.23420</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_127_col">
+          <pose>-1.0533 1.5404 0.2 0 0 -1.15940</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_127_vis">
+          <pose>-1.0533 1.5404 0.2 0 0 -1.15940</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_128_col">
+          <pose>-1.0160 1.4630 0.2 0 0 -1.08460</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_128_vis">
+          <pose>-1.0160 1.4630 0.2 0 0 -1.08460</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_129_col">
+          <pose>-0.9731 1.3886 0.2 0 0 -1.00980</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_129_vis">
+          <pose>-0.9731 1.3886 0.2 0 0 -1.00980</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_130_col">
+          <pose>-0.9246 1.3176 0.2 0 0 -0.93500</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_130_vis">
+          <pose>-0.9246 1.3176 0.2 0 0 -0.93500</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_131_col">
+          <pose>-0.8711 1.2504 0.2 0 0 -0.86020</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_131_vis">
+          <pose>-0.8711 1.2504 0.2 0 0 -0.86020</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_132_col">
+          <pose>-0.8126 1.1874 0.2 0 0 -0.78540</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_132_vis">
+          <pose>-0.8126 1.1874 0.2 0 0 -0.78540</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_133_col">
+          <pose>-0.7496 1.1289 0.2 0 0 -0.71060</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_133_vis">
+          <pose>-0.7496 1.1289 0.2 0 0 -0.71060</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_134_col">
+          <pose>-0.6824 1.0754 0.2 0 0 -0.63580</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_134_vis">
+          <pose>-0.6824 1.0754 0.2 0 0 -0.63580</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_135_col">
+          <pose>-0.6114 1.0269 0.2 0 0 -0.56100</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_135_vis">
+          <pose>-0.6114 1.0269 0.2 0 0 -0.56100</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_136_col">
+          <pose>-0.5370 0.9840 0.2 0 0 -0.48620</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_136_vis">
+          <pose>-0.5370 0.9840 0.2 0 0 -0.48620</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_137_col">
+          <pose>-0.4596 0.9467 0.2 0 0 -0.41140</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_137_vis">
+          <pose>-0.4596 0.9467 0.2 0 0 -0.41140</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_138_col">
+          <pose>-0.3796 0.9153 0.2 0 0 -0.33660</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_138_vis">
+          <pose>-0.3796 0.9153 0.2 0 0 -0.33660</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_139_col">
+          <pose>-0.2974 0.8900 0.2 0 0 -0.26180</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_139_vis">
+          <pose>-0.2974 0.8900 0.2 0 0 -0.26180</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_140_col">
+          <pose>-0.2136 0.8708 0.2 0 0 -0.18700</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_140_vis">
+          <pose>-0.2136 0.8708 0.2 0 0 -0.18700</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_141_col">
+          <pose>-0.1287 0.8580 0.2 0 0 -0.11220</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_141_vis">
+          <pose>-0.1287 0.8580 0.2 0 0 -0.11220</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_int_142_col">
+          <pose>-0.0430 0.8516 0.2 0 0 -0.03740</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_int_142_vis">
+          <pose>-0.0430 0.8516 0.2 0 0 -0.03740</pose>
+          <geometry><box><size>0.1260 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_000_col">
+          <pose>4.0000 -0.8500 0.2 0 0 0.00000</pose>
+          <geometry><box><size>8.0400 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_000_vis">
+          <pose>4.0000 -0.8500 0.2 0 0 0.00000</pose>
+          <geometry><box><size>8.0400 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_001_col">
+          <pose>8.1011 -0.8469 0.2 0 0 0.03021</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_001_vis">
+          <pose>8.1011 -0.8469 0.2 0 0 0.03021</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_002_col">
+          <pose>8.3030 -0.8347 0.2 0 0 0.09062</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_002_vis">
+          <pose>8.3030 -0.8347 0.2 0 0 0.09062</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_003_col">
+          <pose>8.5038 -0.8104 0.2 0 0 0.15104</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_003_vis">
+          <pose>8.5038 -0.8104 0.2 0 0 0.15104</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_004_col">
+          <pose>8.7028 -0.7739 0.2 0 0 0.21145</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_004_vis">
+          <pose>8.7028 -0.7739 0.2 0 0 0.21145</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_005_col">
+          <pose>8.8992 -0.7255 0.2 0 0 0.27187</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_005_vis">
+          <pose>8.8992 -0.7255 0.2 0 0 0.27187</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_006_col">
+          <pose>9.0923 -0.6653 0.2 0 0 0.33228</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_006_vis">
+          <pose>9.0923 -0.6653 0.2 0 0 0.33228</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_007_col">
+          <pose>9.2814 -0.5936 0.2 0 0 0.39270</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_007_vis">
+          <pose>9.2814 -0.5936 0.2 0 0 0.39270</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_008_col">
+          <pose>9.4659 -0.5106 0.2 0 0 0.45311</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_008_vis">
+          <pose>9.4659 -0.5106 0.2 0 0 0.45311</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_009_col">
+          <pose>9.6450 -0.4166 0.2 0 0 0.51353</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_009_vis">
+          <pose>9.6450 -0.4166 0.2 0 0 0.51353</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_010_col">
+          <pose>9.8180 -0.3119 0.2 0 0 0.57394</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_010_vis">
+          <pose>9.8180 -0.3119 0.2 0 0 0.57394</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_011_col">
+          <pose>9.9845 -0.1970 0.2 0 0 0.63436</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_011_vis">
+          <pose>9.9845 -0.1970 0.2 0 0 0.63436</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_012_col">
+          <pose>10.1437 -0.0723 0.2 0 0 0.69478</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_012_vis">
+          <pose>10.1437 -0.0723 0.2 0 0 0.69478</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_013_col">
+          <pose>10.2951 0.0618 0.2 0 0 0.75519</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_013_vis">
+          <pose>10.2951 0.0618 0.2 0 0 0.75519</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_014_col">
+          <pose>10.4382 0.2049 0.2 0 0 0.81561</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_014_vis">
+          <pose>10.4382 0.2049 0.2 0 0 0.81561</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_015_col">
+          <pose>10.5723 0.3563 0.2 0 0 0.87602</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_015_vis">
+          <pose>10.5723 0.3563 0.2 0 0 0.87602</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_016_col">
+          <pose>10.6970 0.5155 0.2 0 0 0.93644</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_016_vis">
+          <pose>10.6970 0.5155 0.2 0 0 0.93644</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_017_col">
+          <pose>10.8119 0.6820 0.2 0 0 0.99685</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_017_vis">
+          <pose>10.8119 0.6820 0.2 0 0 0.99685</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_018_col">
+          <pose>10.9166 0.8550 0.2 0 0 1.05727</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_018_vis">
+          <pose>10.9166 0.8550 0.2 0 0 1.05727</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_019_col">
+          <pose>11.0106 1.0341 0.2 0 0 1.11768</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_019_vis">
+          <pose>11.0106 1.0341 0.2 0 0 1.11768</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_020_col">
+          <pose>11.0936 1.2186 0.2 0 0 1.17810</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_020_vis">
+          <pose>11.0936 1.2186 0.2 0 0 1.17810</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_021_col">
+          <pose>11.1653 1.4077 0.2 0 0 1.23851</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_021_vis">
+          <pose>11.1653 1.4077 0.2 0 0 1.23851</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_022_col">
+          <pose>11.2255 1.6008 0.2 0 0 1.29893</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_022_vis">
+          <pose>11.2255 1.6008 0.2 0 0 1.29893</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_023_col">
+          <pose>11.2739 1.7972 0.2 0 0 1.35934</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_023_vis">
+          <pose>11.2739 1.7972 0.2 0 0 1.35934</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_024_col">
+          <pose>11.3104 1.9962 0.2 0 0 1.41976</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_024_vis">
+          <pose>11.3104 1.9962 0.2 0 0 1.41976</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_025_col">
+          <pose>11.3347 2.1970 0.2 0 0 1.48017</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_025_vis">
+          <pose>11.3347 2.1970 0.2 0 0 1.48017</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_026_col">
+          <pose>11.3469 2.3989 0.2 0 0 1.54059</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_026_vis">
+          <pose>11.3469 2.3989 0.2 0 0 1.54059</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_027_col">
+          <pose>11.3469 2.6011 0.2 0 0 1.60100</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_027_vis">
+          <pose>11.3469 2.6011 0.2 0 0 1.60100</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_028_col">
+          <pose>11.3347 2.8030 0.2 0 0 1.66142</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_028_vis">
+          <pose>11.3347 2.8030 0.2 0 0 1.66142</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_029_col">
+          <pose>11.3104 3.0038 0.2 0 0 1.72183</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_029_vis">
+          <pose>11.3104 3.0038 0.2 0 0 1.72183</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_030_col">
+          <pose>11.2739 3.2028 0.2 0 0 1.78225</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_030_vis">
+          <pose>11.2739 3.2028 0.2 0 0 1.78225</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_031_col">
+          <pose>11.2255 3.3992 0.2 0 0 1.84266</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_031_vis">
+          <pose>11.2255 3.3992 0.2 0 0 1.84266</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_032_col">
+          <pose>11.1653 3.5923 0.2 0 0 1.90308</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_032_vis">
+          <pose>11.1653 3.5923 0.2 0 0 1.90308</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_033_col">
+          <pose>11.0936 3.7814 0.2 0 0 1.96350</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_033_vis">
+          <pose>11.0936 3.7814 0.2 0 0 1.96350</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_034_col">
+          <pose>11.0106 3.9659 0.2 0 0 2.02391</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_034_vis">
+          <pose>11.0106 3.9659 0.2 0 0 2.02391</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_035_col">
+          <pose>10.9166 4.1450 0.2 0 0 2.08433</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_035_vis">
+          <pose>10.9166 4.1450 0.2 0 0 2.08433</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_036_col">
+          <pose>10.8119 4.3180 0.2 0 0 2.14474</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_036_vis">
+          <pose>10.8119 4.3180 0.2 0 0 2.14474</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_037_col">
+          <pose>10.6970 4.4845 0.2 0 0 2.20516</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_037_vis">
+          <pose>10.6970 4.4845 0.2 0 0 2.20516</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_038_col">
+          <pose>10.5723 4.6437 0.2 0 0 2.26557</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_038_vis">
+          <pose>10.5723 4.6437 0.2 0 0 2.26557</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_039_col">
+          <pose>10.4382 4.7951 0.2 0 0 2.32599</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_039_vis">
+          <pose>10.4382 4.7951 0.2 0 0 2.32599</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_040_col">
+          <pose>10.2951 4.9382 0.2 0 0 2.38640</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_040_vis">
+          <pose>10.2951 4.9382 0.2 0 0 2.38640</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_041_col">
+          <pose>10.1437 5.0723 0.2 0 0 2.44682</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_041_vis">
+          <pose>10.1437 5.0723 0.2 0 0 2.44682</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_042_col">
+          <pose>9.9845 5.1970 0.2 0 0 2.50723</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_042_vis">
+          <pose>9.9845 5.1970 0.2 0 0 2.50723</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_043_col">
+          <pose>9.8180 5.3119 0.2 0 0 2.56765</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_043_vis">
+          <pose>9.8180 5.3119 0.2 0 0 2.56765</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_044_col">
+          <pose>9.6450 5.4166 0.2 0 0 2.62806</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_044_vis">
+          <pose>9.6450 5.4166 0.2 0 0 2.62806</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_045_col">
+          <pose>9.4659 5.5106 0.2 0 0 2.68848</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_045_vis">
+          <pose>9.4659 5.5106 0.2 0 0 2.68848</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_046_col">
+          <pose>9.2814 5.5936 0.2 0 0 2.74889</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_046_vis">
+          <pose>9.2814 5.5936 0.2 0 0 2.74889</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_047_col">
+          <pose>9.0923 5.6653 0.2 0 0 2.80931</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_047_vis">
+          <pose>9.0923 5.6653 0.2 0 0 2.80931</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_048_col">
+          <pose>8.8992 5.7255 0.2 0 0 2.86972</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_048_vis">
+          <pose>8.8992 5.7255 0.2 0 0 2.86972</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_049_col">
+          <pose>8.7028 5.7739 0.2 0 0 2.93014</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_049_vis">
+          <pose>8.7028 5.7739 0.2 0 0 2.93014</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_050_col">
+          <pose>8.5038 5.8104 0.2 0 0 2.99055</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_050_vis">
+          <pose>8.5038 5.8104 0.2 0 0 2.99055</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_051_col">
+          <pose>8.3030 5.8347 0.2 0 0 3.05097</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_051_vis">
+          <pose>8.3030 5.8347 0.2 0 0 3.05097</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_052_col">
+          <pose>8.1011 5.8469 0.2 0 0 3.11139</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_052_vis">
+          <pose>8.1011 5.8469 0.2 0 0 3.11139</pose>
+          <geometry><box><size>0.2424 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_053_col">
+          <pose>7.2500 5.8500 0.2 0 0 3.14159</pose>
+          <geometry><box><size>1.5400 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_053_vis">
+          <pose>7.2500 5.8500 0.2 0 0 3.14159</pose>
+          <geometry><box><size>1.5400 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_054_col">
+          <pose>6.4681 5.8516 0.2 0 0 3.09251</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_054_vis">
+          <pose>6.4681 5.8516 0.2 0 0 3.09251</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_055_col">
+          <pose>6.4047 5.8578 0.2 0 0 2.99433</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_055_vis">
+          <pose>6.4047 5.8578 0.2 0 0 2.99433</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_056_col">
+          <pose>6.3423 5.8702 0.2 0 0 2.89616</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_056_vis">
+          <pose>6.3423 5.8702 0.2 0 0 2.89616</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_057_col">
+          <pose>6.2813 5.8887 0.2 0 0 2.79798</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_057_vis">
+          <pose>6.2813 5.8887 0.2 0 0 2.79798</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_058_col">
+          <pose>6.2224 5.9131 0.2 0 0 2.69981</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_058_vis">
+          <pose>6.2224 5.9131 0.2 0 0 2.69981</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_059_col">
+          <pose>6.1662 5.9431 0.2 0 0 2.60163</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_059_vis">
+          <pose>6.1662 5.9431 0.2 0 0 2.60163</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_060_col">
+          <pose>6.1133 5.9785 0.2 0 0 2.50346</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_060_vis">
+          <pose>6.1133 5.9785 0.2 0 0 2.50346</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_061_col">
+          <pose>6.0640 6.0190 0.2 0 0 2.40528</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_061_vis">
+          <pose>6.0640 6.0190 0.2 0 0 2.40528</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_062_col">
+          <pose>6.0190 6.0640 0.2 0 0 2.30711</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_062_vis">
+          <pose>6.0190 6.0640 0.2 0 0 2.30711</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_063_col">
+          <pose>5.9785 6.1133 0.2 0 0 2.20893</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_063_vis">
+          <pose>5.9785 6.1133 0.2 0 0 2.20893</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_064_col">
+          <pose>5.9431 6.1662 0.2 0 0 2.11076</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_064_vis">
+          <pose>5.9431 6.1662 0.2 0 0 2.11076</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_065_col">
+          <pose>5.9131 6.2224 0.2 0 0 2.01258</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_065_vis">
+          <pose>5.9131 6.2224 0.2 0 0 2.01258</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_066_col">
+          <pose>5.8887 6.2813 0.2 0 0 1.91441</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_066_vis">
+          <pose>5.8887 6.2813 0.2 0 0 1.91441</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_067_col">
+          <pose>5.8702 6.3423 0.2 0 0 1.81623</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_067_vis">
+          <pose>5.8702 6.3423 0.2 0 0 1.81623</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_068_col">
+          <pose>5.8578 6.4047 0.2 0 0 1.71806</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_068_vis">
+          <pose>5.8578 6.4047 0.2 0 0 1.71806</pose>
+          <geometry><box><size>0.1038 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_069_col">
+          <pose>5.8459 6.5833 0.2 0 0 1.61988</pose>
+          <geometry><box><size>0.3344 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_069_vis">
+          <pose>5.8459 6.5833 0.2 0 0 1.61988</pose>
+          <geometry><box><size>0.3344 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_070_col">
+          <pose>5.8218 6.8444 0.2 0 0 1.71806</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_070_vis">
+          <pose>5.8218 6.8444 0.2 0 0 1.71806</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_071_col">
+          <pose>5.7768 7.0703 0.2 0 0 1.81623</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_071_vis">
+          <pose>5.7768 7.0703 0.2 0 0 1.81623</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_072_col">
+          <pose>5.7100 7.2907 0.2 0 0 1.91441</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_072_vis">
+          <pose>5.7100 7.2907 0.2 0 0 1.91441</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_073_col">
+          <pose>5.6218 7.5035 0.2 0 0 2.01258</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_073_vis">
+          <pose>5.6218 7.5035 0.2 0 0 2.01258</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_074_col">
+          <pose>5.5132 7.7067 0.2 0 0 2.11076</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_074_vis">
+          <pose>5.5132 7.7067 0.2 0 0 2.11076</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_075_col">
+          <pose>5.3853 7.8982 0.2 0 0 2.20893</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_075_vis">
+          <pose>5.3853 7.8982 0.2 0 0 2.20893</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_076_col">
+          <pose>5.2391 8.0763 0.2 0 0 2.30711</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_076_vis">
+          <pose>5.2391 8.0763 0.2 0 0 2.30711</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_077_col">
+          <pose>5.0763 8.2391 0.2 0 0 2.40528</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_077_vis">
+          <pose>5.0763 8.2391 0.2 0 0 2.40528</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_078_col">
+          <pose>4.8982 8.3853 0.2 0 0 2.50346</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_078_vis">
+          <pose>4.8982 8.3853 0.2 0 0 2.50346</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_079_col">
+          <pose>4.7067 8.5132 0.2 0 0 2.60163</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_079_vis">
+          <pose>4.7067 8.5132 0.2 0 0 2.60163</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_080_col">
+          <pose>4.5035 8.6218 0.2 0 0 2.69981</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_080_vis">
+          <pose>4.5035 8.6218 0.2 0 0 2.69981</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_081_col">
+          <pose>4.2907 8.7100 0.2 0 0 2.79798</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_081_vis">
+          <pose>4.2907 8.7100 0.2 0 0 2.79798</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_082_col">
+          <pose>4.0703 8.7768 0.2 0 0 2.89616</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_082_vis">
+          <pose>4.0703 8.7768 0.2 0 0 2.89616</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_083_col">
+          <pose>3.8444 8.8218 0.2 0 0 2.99433</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_083_vis">
+          <pose>3.8444 8.8218 0.2 0 0 2.99433</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_084_col">
+          <pose>3.6152 8.8443 0.2 0 0 3.09251</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_084_vis">
+          <pose>3.6152 8.8443 0.2 0 0 3.09251</pose>
+          <geometry><box><size>0.2706 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_085_col">
+          <pose>3.4239 8.8484 0.2 0 0 -3.12115</pose>
+          <geometry><box><size>0.1922 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_085_vis">
+          <pose>3.4239 8.8484 0.2 0 0 -3.12115</pose>
+          <geometry><box><size>0.1922 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_086_col">
+          <pose>3.2717 8.8233 0.2 0 0 -2.84079</pose>
+          <geometry><box><size>0.1993 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_086_vis">
+          <pose>3.2717 8.8233 0.2 0 0 -2.84079</pose>
+          <geometry><box><size>0.1993 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_087_col">
+          <pose>3.1196 8.7537 0.2 0 0 -2.59829</pose>
+          <geometry><box><size>0.2178 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_087_vis">
+          <pose>3.1196 8.7537 0.2 0 0 -2.59829</pose>
+          <geometry><box><size>0.2178 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_088_col">
+          <pose>2.9674 8.6521 0.2 0 0 -2.51023</pose>
+          <geometry><box><size>0.2285 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_088_vis">
+          <pose>2.9674 8.6521 0.2 0 0 -2.51023</pose>
+          <geometry><box><size>0.2285 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_089_col">
+          <pose>2.8152 8.5465 0.2 0 0 -2.56033</pose>
+          <geometry><box><size>0.2221 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_089_vis">
+          <pose>2.8152 8.5465 0.2 0 0 -2.56033</pose>
+          <geometry><box><size>0.2221 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_090_col">
+          <pose>2.6630 8.4660 0.2 0 0 -2.75964</pose>
+          <geometry><box><size>0.2040 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_090_vis">
+          <pose>2.6630 8.4660 0.2 0 0 -2.75964</pose>
+          <geometry><box><size>0.2040 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_091_col">
+          <pose>2.5109 8.4302 0.2 0 0 -3.07329</pose>
+          <geometry><box><size>0.1925 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_091_vis">
+          <pose>2.5109 8.4302 0.2 0 0 -3.07329</pose>
+          <geometry><box><size>0.1925 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_092_col">
+          <pose>1.7500 8.4250 0.2 0 0 3.14159</pose>
+          <geometry><box><size>1.4096 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_092_vis">
+          <pose>1.7500 8.4250 0.2 0 0 3.14159</pose>
+          <geometry><box><size>1.4096 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_093_col">
+          <pose>0.9891 8.4295 0.2 0 0 3.08225</pose>
+          <geometry><box><size>0.1924 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_093_vis">
+          <pose>0.9891 8.4295 0.2 0 0 3.08225</pose>
+          <geometry><box><size>0.1924 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_094_col">
+          <pose>0.8370 8.4636 0.2 0 0 2.77115</pose>
+          <geometry><box><size>0.2032 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_094_vis">
+          <pose>0.8370 8.4636 0.2 0 0 2.77115</pose>
+          <geometry><box><size>0.2032 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_095_col">
+          <pose>0.6848 8.5426 0.2 0 0 2.56535</pose>
+          <geometry><box><size>0.2215 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_095_vis">
+          <pose>0.6848 8.5426 0.2 0 0 2.56535</pose>
+          <geometry><box><size>0.2215 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_096_col">
+          <pose>0.5326 8.6477 0.2 0 0 2.50961</pose>
+          <geometry><box><size>0.2286 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_096_vis">
+          <pose>0.5326 8.6477 0.2 0 0 2.50961</pose>
+          <geometry><box><size>0.2286 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_097_col">
+          <pose>0.3804 8.7501 0.2 0 0 2.59186</pose>
+          <geometry><box><size>0.2185 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_097_vis">
+          <pose>0.3804 8.7501 0.2 0 0 2.59186</pose>
+          <geometry><box><size>0.2185 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_098_col">
+          <pose>0.2283 8.8214 0.2 0 0 2.82785</pose>
+          <geometry><box><size>0.2000 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_098_vis">
+          <pose>0.2283 8.8214 0.2 0 0 2.82785</pose>
+          <geometry><box><size>0.2000 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_099_col">
+          <pose>0.0761 8.8480 0.2 0 0 3.11570</pose>
+          <geometry><box><size>0.1922 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_099_vis">
+          <pose>0.0761 8.8480 0.2 0 0 3.11570</pose>
+          <geometry><box><size>0.1922 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_100_col">
+          <pose>-0.1065 8.8460 0.2 0 0 -3.10419</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_100_vis">
+          <pose>-0.1065 8.8460 0.2 0 0 -3.10419</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_101_col">
+          <pose>-0.3189 8.8301 0.2 0 0 -3.02939</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_101_vis">
+          <pose>-0.3189 8.8301 0.2 0 0 -3.02939</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_102_col">
+          <pose>-0.5295 8.7984 0.2 0 0 -2.95459</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_102_vis">
+          <pose>-0.5295 8.7984 0.2 0 0 -2.95459</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_103_col">
+          <pose>-0.7371 8.7510 0.2 0 0 -2.87979</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_103_vis">
+          <pose>-0.7371 8.7510 0.2 0 0 -2.87979</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_104_col">
+          <pose>-0.9406 8.6882 0.2 0 0 -2.80499</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_104_vis">
+          <pose>-0.9406 8.6882 0.2 0 0 -2.80499</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_105_col">
+          <pose>-1.1389 8.6104 0.2 0 0 -2.73019</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_105_vis">
+          <pose>-1.1389 8.6104 0.2 0 0 -2.73019</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_106_col">
+          <pose>-1.3308 8.5180 0.2 0 0 -2.65539</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_106_vis">
+          <pose>-1.3308 8.5180 0.2 0 0 -2.65539</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_107_col">
+          <pose>-1.5152 8.4115 0.2 0 0 -2.58059</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_107_vis">
+          <pose>-1.5152 8.4115 0.2 0 0 -2.58059</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_108_col">
+          <pose>-1.6912 8.2915 0.2 0 0 -2.50579</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_108_vis">
+          <pose>-1.6912 8.2915 0.2 0 0 -2.50579</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_109_col">
+          <pose>-1.8577 8.1587 0.2 0 0 -2.43099</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_109_vis">
+          <pose>-1.8577 8.1587 0.2 0 0 -2.43099</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_110_col">
+          <pose>-2.0138 8.0138 0.2 0 0 -2.35619</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_110_vis">
+          <pose>-2.0138 8.0138 0.2 0 0 -2.35619</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_111_col">
+          <pose>-2.1587 7.8577 0.2 0 0 -2.28139</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_111_vis">
+          <pose>-2.1587 7.8577 0.2 0 0 -2.28139</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_112_col">
+          <pose>-2.2915 7.6912 0.2 0 0 -2.20659</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_112_vis">
+          <pose>-2.2915 7.6912 0.2 0 0 -2.20659</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_113_col">
+          <pose>-2.4115 7.5152 0.2 0 0 -2.13180</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_113_vis">
+          <pose>-2.4115 7.5152 0.2 0 0 -2.13180</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_114_col">
+          <pose>-2.5180 7.3308 0.2 0 0 -2.05700</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_114_vis">
+          <pose>-2.5180 7.3308 0.2 0 0 -2.05700</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_115_col">
+          <pose>-2.6104 7.1389 0.2 0 0 -1.98220</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_115_vis">
+          <pose>-2.6104 7.1389 0.2 0 0 -1.98220</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_116_col">
+          <pose>-2.6882 6.9406 0.2 0 0 -1.90740</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_116_vis">
+          <pose>-2.6882 6.9406 0.2 0 0 -1.90740</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_117_col">
+          <pose>-2.7510 6.7371 0.2 0 0 -1.83260</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_117_vis">
+          <pose>-2.7510 6.7371 0.2 0 0 -1.83260</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_118_col">
+          <pose>-2.7984 6.5295 0.2 0 0 -1.75780</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_118_vis">
+          <pose>-2.7984 6.5295 0.2 0 0 -1.75780</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_119_col">
+          <pose>-2.8301 6.3189 0.2 0 0 -1.68300</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_119_vis">
+          <pose>-2.8301 6.3189 0.2 0 0 -1.68300</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_120_col">
+          <pose>-2.8460 6.1065 0.2 0 0 -1.60820</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_120_vis">
+          <pose>-2.8460 6.1065 0.2 0 0 -1.60820</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_121_col">
+          <pose>-2.8500 4.0000 0.2 0 0 -1.57080</pose>
+          <geometry><box><size>4.0400 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_121_vis">
+          <pose>-2.8500 4.0000 0.2 0 0 -1.57080</pose>
+          <geometry><box><size>4.0400 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_122_col">
+          <pose>-2.8460 1.8935 0.2 0 0 -1.53340</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_122_vis">
+          <pose>-2.8460 1.8935 0.2 0 0 -1.53340</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_123_col">
+          <pose>-2.8301 1.6811 0.2 0 0 -1.45860</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_123_vis">
+          <pose>-2.8301 1.6811 0.2 0 0 -1.45860</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_124_col">
+          <pose>-2.7984 1.4705 0.2 0 0 -1.38380</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_124_vis">
+          <pose>-2.7984 1.4705 0.2 0 0 -1.38380</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_125_col">
+          <pose>-2.7510 1.2629 0.2 0 0 -1.30900</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_125_vis">
+          <pose>-2.7510 1.2629 0.2 0 0 -1.30900</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_126_col">
+          <pose>-2.6882 1.0594 0.2 0 0 -1.23420</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_126_vis">
+          <pose>-2.6882 1.0594 0.2 0 0 -1.23420</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_127_col">
+          <pose>-2.6104 0.8611 0.2 0 0 -1.15940</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_127_vis">
+          <pose>-2.6104 0.8611 0.2 0 0 -1.15940</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_128_col">
+          <pose>-2.5180 0.6692 0.2 0 0 -1.08460</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_128_vis">
+          <pose>-2.5180 0.6692 0.2 0 0 -1.08460</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_129_col">
+          <pose>-2.4115 0.4848 0.2 0 0 -1.00980</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_129_vis">
+          <pose>-2.4115 0.4848 0.2 0 0 -1.00980</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_130_col">
+          <pose>-2.2915 0.3088 0.2 0 0 -0.93500</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_130_vis">
+          <pose>-2.2915 0.3088 0.2 0 0 -0.93500</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_131_col">
+          <pose>-2.1587 0.1423 0.2 0 0 -0.86020</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_131_vis">
+          <pose>-2.1587 0.1423 0.2 0 0 -0.86020</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_132_col">
+          <pose>-2.0138 -0.0138 0.2 0 0 -0.78540</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_132_vis">
+          <pose>-2.0138 -0.0138 0.2 0 0 -0.78540</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_133_col">
+          <pose>-1.8577 -0.1587 0.2 0 0 -0.71060</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_133_vis">
+          <pose>-1.8577 -0.1587 0.2 0 0 -0.71060</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_134_col">
+          <pose>-1.6912 -0.2915 0.2 0 0 -0.63580</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_134_vis">
+          <pose>-1.6912 -0.2915 0.2 0 0 -0.63580</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_135_col">
+          <pose>-1.5152 -0.4115 0.2 0 0 -0.56100</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_135_vis">
+          <pose>-1.5152 -0.4115 0.2 0 0 -0.56100</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_136_col">
+          <pose>-1.3308 -0.5180 0.2 0 0 -0.48620</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_136_vis">
+          <pose>-1.3308 -0.5180 0.2 0 0 -0.48620</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_137_col">
+          <pose>-1.1389 -0.6104 0.2 0 0 -0.41140</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_137_vis">
+          <pose>-1.1389 -0.6104 0.2 0 0 -0.41140</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_138_col">
+          <pose>-0.9406 -0.6882 0.2 0 0 -0.33660</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_138_vis">
+          <pose>-0.9406 -0.6882 0.2 0 0 -0.33660</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_139_col">
+          <pose>-0.7371 -0.7510 0.2 0 0 -0.26180</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_139_vis">
+          <pose>-0.7371 -0.7510 0.2 0 0 -0.26180</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_140_col">
+          <pose>-0.5295 -0.7984 0.2 0 0 -0.18700</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_140_vis">
+          <pose>-0.5295 -0.7984 0.2 0 0 -0.18700</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_141_col">
+          <pose>-0.3189 -0.8301 0.2 0 0 -0.11220</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_141_vis">
+          <pose>-0.3189 -0.8301 0.2 0 0 -0.11220</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+        <collision name="muro_ext_142_col">
+          <pose>-0.1065 -0.8460 0.2 0 0 -0.03740</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+        </collision>
+        <visual name="muro_ext_142_vis">
+          <pose>-0.1065 -0.8460 0.2 0 0 -0.03740</pose>
+          <geometry><box><size>0.2531 0.1 0.4</size></box></geometry>
+          <material><ambient>0.75 0.15 0.10 1</ambient><diffuse>0.85 0.20 0.15 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===================== Obstaculos ===================== -->
+    <!-- Slalom en la recta inferior (carril y = -0.8 .. 0.8) -->
+    <model name="obs_caja_1">
+      <static>true</static>
+      <pose>3.0 0.35 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.3 0.3 0.4</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>0.3 0.3 0.4</size></box></geometry>
+          <material><ambient>0.1 0.3 0.8 1</ambient><diffuse>0.15 0.35 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="obs_cilindro_1">
+      <static>true</static>
+      <pose>4.8 -0.35 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.15</radius><length>0.4</length></cylinder></geometry></collision>
+        <visual name="vis">
+          <geometry><cylinder><radius>0.15</radius><length>0.4</length></cylinder></geometry>
+          <material><ambient>0.9 0.5 0.0 1</ambient><diffuse>1.0 0.55 0.0 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="obs_caja_2">
+      <static>true</static>
+      <pose>6.6 0.35 0.2 0 0 0.4</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.3 0.3 0.4</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>0.3 0.3 0.4</size></box></geometry>
+          <material><ambient>0.1 0.3 0.8 1</ambient><diffuse>0.15 0.35 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Dentro de la horquilla, pegado al interior de la curva -->
+    <model name="obs_cilindro_2">
+      <static>true</static>
+      <pose>10.0 2.5 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.15</radius><length>0.4</length></cylinder></geometry></collision>
+        <visual name="vis">
+          <geometry><cylinder><radius>0.15</radius><length>0.4</length></cylinder></geometry>
+          <material><ambient>0.9 0.5 0.0 1</ambient><diffuse>1.0 0.55 0.0 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Recta corta antes de la chicane (carril y = 4.2 .. 5.8) -->
+    <model name="obs_caja_3">
+      <static>true</static>
+      <pose>7.4 5.4 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.3 0.3 0.4</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>0.3 0.3 0.4</size></box></geometry>
+          <material><ambient>0.1 0.3 0.8 1</ambient><diffuse>0.15 0.35 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Recta izquierda (carril x = -2.8 .. -1.2) -->
+    <model name="obs_caja_4">
+      <static>true</static>
+      <pose>-1.6 4.0 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.35 0.35 0.4</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>0.35 0.35 0.4</size></box></geometry>
+          <material><ambient>0.1 0.3 0.8 1</ambient><diffuse>0.15 0.35 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
